@@ -2,7 +2,7 @@
 
 This script backs up your owncloud, upload it to Mega.co.nz or restores it. 
 
-### HOWTO ### 
+### Howto ### 
  
 ```
 ./owncloud_backup.sh --help
@@ -22,7 +22,9 @@ encrypt your password for the moment.
 Using crontab as root, as it needs to access to protected 'data' folder
 
 ```
-# Every two days, at 0h00
+sudo crontab -e
+
+# Then add this line. Every two days, at 0h00
 0 0 */2 * * bash /path/to/owncloud_backup.sh --backup --mega
 ``` 
 
