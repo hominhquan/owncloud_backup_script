@@ -89,17 +89,18 @@ OPTIONS:
 
   Backup
    -b, --backup                Back up now
-   -m, --mega                  If set, upload tar.gz to Mega
+   -m, --mega                  If set, upload tar.gz to Mega 
 
   Restore
    -l, --list                  List available backups
    -r, --restore RESTORE_DATE  Restore owncloud to a backup-ed date 
                                  Date is in format : date +%Y%m%d (see --list)
   Optional
-   -i, --input-dir             Owncloud install directory to backup
+   -i, --input-dir    PATH     Owncloud install directory to backup
                                  Default = $OWNCLOUD_INPUT_DIR
-   -o, --output-dir            Owncloud output directory to store tar file
+   -o, --output-dir   PATH     Owncloud output directory to store tar file
                                  Default = $OWNCLOUD_OUTPUT_DIR
+   -p, --path-mega    PATH     Path to mega tools (default = $MEGATOOLS_DIR)
 
 EOF
 }
@@ -115,8 +116,8 @@ if [ $# -eq 0 ] ; then
 	exit 0
 fi
 
-OPTS=`getopt -o hvbmlr:i:o: \
-	--long help,verbose,backup,mega,list,restore:input-dir:,output-dir: \
+OPTS=`getopt -o hvbmlr:i:o:p: \
+	-l help,verbose,backup,mega,list,restore:input-dir:,output-dir:path-mega: \
 	-n 'parse-options' -- "$@"`
  
 if [ $? != 0 ] ; then 
@@ -137,6 +138,7 @@ while true; do
     -r | --restore )    DO_RESTORE=true; RESTORE_DATE="$2"; shift; shift ;;
     -i | --input-dir )  OWNCLOUD_INPUT_DIR="$2"; shift; shift ;;
     -o | --output-dir ) OWNCLOUD_OUTPUT_DIR="$2"; shift; shift ;;
+    -p | --path-mega )  MEGATOOLS_DIR="$2"; shift; shift ;;
     -- )                shift; break ;;
     * )                 break ;;
   esac
