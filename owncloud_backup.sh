@@ -158,6 +158,7 @@ if $DO_BACKUP; then
 	BEGIN=`date`
 
 	# Do backup
+	echo "*********************************************************************"
 	echo "Backing up $OWNCLOUD_INPUT_DIR to $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz"
 	mkdir -p $OWNCLOUD_OUTPUT_DIR
 	# back up database to input directory
@@ -204,6 +205,8 @@ if $DO_BACKUP; then
 	END=`date`
 
 	echo "Backing up began at $BEGIN, terminated at $END"
+	echo "*********************************************************************"
+	echo ""
 fi
 
 if $DO_RESTORE; then
