@@ -58,6 +58,7 @@ OLD_MONTHS=3
 # Megatools 
 ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
 MEGATOOLS_DIR="$HOME/build/bin/"   # path to where Megatools have been installed
+MEGA_CONFIG_FILE="$HOME/.megarc"
 MEGA_UPLOAD_DIR="/Root/backup/rpi" # upload path on Mega
 
 # MYSQL SETUP
@@ -101,6 +102,7 @@ OPTIONS:
    -o, --output-dir   PATH     Owncloud output directory to store tar file
                                  Default = $OWNCLOUD_OUTPUT_DIR
    -p, --path-mega    PATH     Path to mega tools (default = $MEGATOOLS_DIR)
+   -c, --config-mega  FILE     Megatools .megarc config file (default = $MEGA_CONFIG_FILE)
 
 EOF
 }
@@ -116,8 +118,8 @@ if [ $# -eq 0 ] ; then
 	exit 0
 fi
 
-OPTS=`getopt -o hvbmlr:i:o:p: \
-	-l help,verbose,backup,mega,list,restore:input-dir:,output-dir:path-mega: \
+OPTS=`getopt -o hvbmlr:i:o:p:c: \
+	-l help,verbose,backup,mega,list,restore:input-dir:,output-dir:path-mega:config-mega: \
 	-n 'parse-options' -- "$@"`
  
 if [ $? != 0 ] ; then 
@@ -139,6 +141,7 @@ while true; do
     -i | --input-dir )  OWNCLOUD_INPUT_DIR="$2"; shift; shift ;;
     -o | --output-dir ) OWNCLOUD_OUTPUT_DIR="$2"; shift; shift ;;
     -p | --path-mega )  MEGATOOLS_DIR="$2"; shift; shift ;;
+    -c | --config-mega )  MEGA_CONFIG_FILE="$2"; shift; shift ;;
     -- )                shift; break ;;
     * )                 break ;;
   esac
@@ -169,7 +172,7 @@ if $DO_BACKUP; then
 	# Upload to Mega
 	if $MEGA; then
 		echo "Uploading $OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz to Mega. "
-		$MEGATOOLS_DIR/megaput --reload \
+		$MEGATOOLS_DIR/megaput --reload --config=$MEGA_CONFIG_FILE \
 			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
 			--path=$MEGA_UPLOAD_DIR
 		echo "Done."
@@ -191,7 +194,7 @@ if $DO_BACKUP; then
 			
 				if $ALSO_DELETE_FROM_MEGA; then
 					echo "Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz from Mega"
-					$MEGATOOLS_DIR/megarm --reload \
+					$MEGATOOLS_DIR/megarm --reload --config=$MEGA_CONFIG_FILE \
 						$MEGA_UPLOAD_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz
 				fi
 			fi
