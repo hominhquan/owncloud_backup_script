@@ -167,6 +167,7 @@ if $DO_BACKUP; then
 	# compress input directory 
 	tar -czf $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
 		$OWNCLOUD_INPUT_DIR $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
+
 	# remove database backup file
 	rm -f $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 
@@ -181,20 +182,20 @@ if $DO_BACKUP; then
 
 	# Check to delete old backups
 	if [[ ! -z $OLD_MONTHS ]]; then
-		echo "Checking if old backups need to be deleted"
+		echo "   Checking if old backups need to be deleted"
 		# Multiply OLD_MONTHS by 100 to compare age
-		LIMIT_AGE=$((OLD_MONTH * 100))
+		LIMIT_AGE=$((OLD_MONTHS*100))
 		for old_backup in $( ls $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*.tgz )
 		do
 			old_date=$(echo $old_backup | awk '{split($0,a,"_"); print a[3]}' | \
 				awk '{split($0,a,"."); print a[1]}')
-			age=$((DATE_FORMAT - old_date))
+			age=$((DATE_FORMAT-old_date))
 			if [ "$age" -gt "$LIMIT_AGE" ]; then
-				echo "Deleting old backup on disk : $old_backup"	
+				echo "      Deleting old backup on disk : $old_backup"	
 				rm -f $old_backup
 			
 				if $ALSO_DELETE_FROM_MEGA; then
-					echo "Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz from Mega"
+					echo "      Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz from Mega"
 					$MEGATOOLS_DIR/megarm --reload --config=$MEGA_CONFIG_FILE \
 						$MEGA_UPLOAD_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz
 				fi
