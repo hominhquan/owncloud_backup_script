@@ -64,8 +64,6 @@ OLD_MONTHS=3
 # Megatools 
 ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
 MEGATOOLS_DIR="$HOME/build/bin/"   # path to where Megatools have been installed
-MEGAPUT="$MEGATOOLS_DIR/megaput"   # Mega uploading executable
-MEGARM="$MEGATOOLS_DIR/megarm"     # Mega deleting executable
 MEGA_CONFIG_FILE="$HOME/.megarc"   # megatools config file
 MEGA_UPLOAD_DIR="/Root/backup/rpi" # upload path on Mega
 
@@ -157,6 +155,9 @@ while true; do
     * )                 break ;;
   esac
 done
+
+MEGAPUT="$MEGATOOLS_DIR/megaput"   # Mega uploading executable
+MEGARM="$MEGATOOLS_DIR/megarm"     # Mega deleting executable
 
 if $LIST; then
 	echo "Owncloud available backups : "
