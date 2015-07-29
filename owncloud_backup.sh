@@ -29,12 +29,18 @@
 
 ###############################################################################
 # This script is for backing up and restoring your personal owncloud.
-
+#
 # Tar files can also be set to upload to Mega.co.nz, using Megatools  
 # http://megatools.megous.com/, with ~/.megarc pre-set
-
+#
 # This script can also be used to backup your whole 'www' directory, 
 # just need to change OWNCLOUD_INPUT_DIR and/or database configuration.  
+#
+# I assume that you are using MySQL for database manager. If you use SQLite 
+# or PostgreSQL, feel free to add your commands and contribute to this script. 
+# Command can be found at : 
+#     https://doc.owncloud.org/server/<your_OC_version>/admin_manual/maintenance/backup.html
+# e.g 8.1 is the latest version at this time. 
 ###############################################################################
 
 # Configuration : Edit these variables below to fit your environment
@@ -58,7 +64,9 @@ OLD_MONTHS=3
 # Megatools 
 ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
 MEGATOOLS_DIR="$HOME/build/bin/"   # path to where Megatools have been installed
-MEGA_CONFIG_FILE="$HOME/.megarc"
+MEGAPUT="$MEGATOOLS_DIR/megaput"   # Mega uploading executable
+MEGARM="$MEGATOOLS_DIR/megarm"     # Mega deleting executable
+MEGA_CONFIG_FILE="$HOME/.megarc"   # megatools config file
 MEGA_UPLOAD_DIR="/Root/backup/rpi" # upload path on Mega
 
 # MYSQL SETUP
@@ -75,7 +83,8 @@ DO_RESTORE=false
 MEGA=false
 LIST=false
 RESTORE_DATE=
- 
+EXCLUDE_PATTERN=
+
 usage()
 {
 cat << EOF
@@ -99,6 +108,7 @@ OPTIONS:
   Optional
    -i, --input-dir    PATH     Owncloud install directory to backup
                                  Default = $OWNCLOUD_INPUT_DIR
+   -e, --exclude     PATTERN   Exclude files by a pattern, option passed to tar
    -o, --output-dir   PATH     Owncloud output directory to store tar file
                                  Default = $OWNCLOUD_OUTPUT_DIR
    -p, --path-mega    PATH     Path to mega tools (default = $MEGATOOLS_DIR)
@@ -142,6 +152,7 @@ while true; do
     -o | --output-dir ) OWNCLOUD_OUTPUT_DIR="$2"; shift; shift ;;
     -p | --path-mega )  MEGATOOLS_DIR="$2"; shift; shift ;;
     -c | --config-mega )  MEGA_CONFIG_FILE="$2"; shift; shift ;;
+    -e | --exclude )    EXCLUDE_PATTERN="--exclude=$2"; shift; shift ;;
     -- )                shift; break ;;
     * )                 break ;;
   esac
@@ -165,7 +176,7 @@ if $DO_BACKUP; then
 	mysqldump --lock-tables -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
 		$MYSQL_DB_NAME > $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 	# compress input directory 
-	tar -czf $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
+	tar -czf $EXCLUDE_PATTERN $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
 		$OWNCLOUD_INPUT_DIR $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 
 	# remove database backup file
@@ -174,7 +185,7 @@ if $DO_BACKUP; then
 	# Upload to Mega
 	if $MEGA; then
 		echo "Uploading $OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz to Mega. "
-		$MEGATOOLS_DIR/megaput --reload --config=$MEGA_CONFIG_FILE \
+		$MEGAPUT --reload --config=$MEGA_CONFIG_FILE \
 			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
 			--path=$MEGA_UPLOAD_DIR
 		echo "Done."
@@ -196,7 +207,7 @@ if $DO_BACKUP; then
 			
 				if $ALSO_DELETE_FROM_MEGA; then
 					echo "      Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz from Mega"
-					$MEGATOOLS_DIR/megarm --reload --config=$MEGA_CONFIG_FILE \
+					$MEGARM --reload --config=$MEGA_CONFIG_FILE \
 						$MEGA_UPLOAD_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz
 				fi
 			fi
@@ -213,7 +224,8 @@ fi
 if $DO_RESTORE; then
 	if [ -f $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz ]; then
 		# Extract backup to folder
-		tar -xzf --overwrite $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz -C /
+		tar -xzf --overwrite $EXCLUDE_PATTERN \
+			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz -C /
 		# Restore database
 		mysql -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
 			$MYSQL_DB_NAME < $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$RESTORE_DATE.bak
