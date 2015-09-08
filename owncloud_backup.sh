@@ -59,7 +59,7 @@ OWNCLOUD_BACKUP_PREFIX="owncloud_backup"
 # Delete old backups to save disk space. 
 #   * Let empty if you do not want to delete. 
 #   * Set to e.g 3 to delete files older than 3 months.
-OLD_MONTHS=3
+OLD_MONTHS=2
 
 # Megatools 
 ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
