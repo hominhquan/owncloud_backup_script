@@ -199,7 +199,7 @@ if $DO_BACKUP; then
 		LIMIT_AGE=$((OLD_MONTHS*100))
 		for old_backup in $( ls $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*.tgz )
 		do
-			old_date=$(echo $old_backup | awk '{split($0,a,"_"); print a[3]}' | \
+			old_date=$(basename $old_backup | awk '{split($0,a,"_"); print a[3]}' | \
 				awk '{split($0,a,"."); print a[1]}')
 			age=$((DATE_FORMAT-old_date))
 			if [ "$age" -gt "$LIMIT_AGE" ]; then
