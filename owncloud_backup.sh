@@ -73,6 +73,10 @@ MYSQL_USERNAME="username"
 MYSQL_PASSWORD="password"
 MYSQL_DB_NAME="owncloud"
 
+#IONICE="/usr/bin/ionice -c3 "
+IONICE=""
+TAR="$IONICE tar "
+
 ###############################################################################
 
 VERBOSE=false
@@ -177,7 +181,7 @@ if $DO_BACKUP; then
 	mysqldump --lock-tables -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
 		$MYSQL_DB_NAME > $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 	# compress input directory 
-	tar -czf $EXCLUDE_PATTERN $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
+	$TAR -czf $EXCLUDE_PATTERN $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
 		$OWNCLOUD_INPUT_DIR $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 
 	# remove database backup file
@@ -225,7 +229,7 @@ fi
 if $DO_RESTORE; then
 	if [ -f $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz ]; then
 		# Extract backup to folder
-		tar -xzf --overwrite $EXCLUDE_PATTERN \
+		$TAR -xzf --overwrite $EXCLUDE_PATTERN \
 			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz -C /
 		# Restore database
 		mysql -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
