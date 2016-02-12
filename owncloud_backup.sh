@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2015, Minh Quan HO < minh-quan.ho _at_ imag.fr >
+# Copyright (c) 2015, Minh Quan HO < hmquan89 _at_ gmail.com >
 # 
 # All rights reserved.
 # 
@@ -32,9 +32,6 @@
 #
 # Tar files can also be set to upload to Mega.co.nz, using Megatools  
 # http://megatools.megous.com/, with ~/.megarc pre-set
-#
-# This script can also be used to backup your whole 'www' directory, 
-# just need to change OWNCLOUD_INPUT_DIR and/or database configuration.  
 #
 # I assume that you are using MySQL for database manager. If you use SQLite 
 # or PostgreSQL, feel free to add your commands and contribute to this script. 
@@ -113,6 +110,7 @@ OPTIONS:
    -e, --exclude     PATTERN   Exclude files by a pattern, option passed to tar
    -o, --output-dir   PATH     Owncloud output directory to store tar file
                                  Default = $OWNCLOUD_OUTPUT_DIR
+   -n, --output-prefix NAME    Prefix for output file name (default = $OWNCLOUD_BACKUP_PREFIX)
    -p, --path-mega    PATH     Path to mega tools (default = $MEGATOOLS_DIR)
    -c, --config-mega  FILE     Megatools .megarc config file (default = $MEGA_CONFIG_FILE)
 
@@ -152,6 +150,7 @@ while true; do
     -r | --restore )    DO_RESTORE=true; RESTORE_DATE="$2"; shift; shift ;;
     -i | --input-dir )  OWNCLOUD_INPUT_DIR="$2"; shift; shift ;;
     -o | --output-dir ) OWNCLOUD_OUTPUT_DIR="$2"; shift; shift ;;
+    -n | --output-prefix ) OWNCLOUD_BACKUP_PREFIX="$2"; shift; shift ;;
     -p | --path-mega )  MEGATOOLS_DIR="$2"; shift; shift ;;
     -c | --config-mega )  MEGA_CONFIG_FILE="$2"; shift; shift ;;
     -e | --exclude )    EXCLUDE_PATTERN="--exclude=$2"; shift; shift ;;
@@ -164,7 +163,7 @@ MEGAPUT="$MEGATOOLS_DIR/megaput"   # Mega uploading executable
 MEGARM="$MEGATOOLS_DIR/megarm"     # Mega deleting executable
 
 if $LIST; then
-	echo "Owncloud available backups : "
+	echo "Available backups of $OWNCLOUD_BACKUP_PREFIX* : "
 	ls -lh $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*
 	exit 0
 fi
