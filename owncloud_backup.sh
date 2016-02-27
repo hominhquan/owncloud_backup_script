@@ -63,7 +63,7 @@ TAR_USE_PROGRAM="--use-compress-prog=pbzip2"
 # Delete old backups to save disk space. 
 #   * Let empty if you do not want to delete. 
 #   * Set to e.g 3 to delete files older than 3 months.
-OLD_MONTHS=2
+OLD_MONTHS=1
 
 # Megatools 
 ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
