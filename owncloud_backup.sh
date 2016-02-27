@@ -50,8 +50,15 @@ OWNCLOUD_OUTPUT_DIR="$HOME/owncloud_backup/"
 
 # Output tar file name
 DATE_FORMAT="`date +%Y%m%d`"
-# file name will be $OWNCLOUD_BACKUP_PREFIX_$DATE_FORMAT.tgz
+# file name will be $OWNCLOUD_BACKUP_PREFIX_$DATE_FORMAT.<extension>
 OWNCLOUD_BACKUP_PREFIX="owncloud_backup" 
+
+# tar options
+TAR="tar"
+TAR_EXTENSION="tar.bz2"
+TAR_COMPRESS_OPT="-cf"
+TAR_DECOMPRESS_OPT="-xf"
+TAR_USE_PROGRAM="--use-compress-prog=pbzip2"
 
 # Delete old backups to save disk space. 
 #   * Let empty if you do not want to delete. 
@@ -69,10 +76,6 @@ MYSQL_SERVER="localhost"
 MYSQL_USERNAME="username"
 MYSQL_PASSWORD="password"
 MYSQL_DB_NAME="owncloud"
-
-#IONICE="/usr/bin/ionice -c3 "
-IONICE=""
-TAR="$IONICE tar "
 
 ###############################################################################
 
@@ -174,23 +177,23 @@ if $DO_BACKUP; then
 
 	# Do backup
 	echo "*********************************************************************"
-	echo "Backing up $OWNCLOUD_INPUT_DIR to $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz"
+	echo "Backing up $OWNCLOUD_INPUT_DIR to $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.$TAR_EXTENSION"
 	mkdir -p $OWNCLOUD_OUTPUT_DIR
 	# back up database to input directory
 	mysqldump --lock-tables -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
 		$MYSQL_DB_NAME > $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 	# compress input directory 
-	$TAR -czf $EXCLUDE_PATTERN $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
-		$OWNCLOUD_INPUT_DIR $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
+	$TAR $TAR_COMPRESS_OPT $EXCLUDE_PATTERN $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.$TAR_EXTENSION \
+		$TAR_USE_PROGRAM $OWNCLOUD_INPUT_DIR $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 
 	# remove database backup file
 	rm -f $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$DATE_FORMAT.bak
 
 	# Upload to Mega
 	if $MEGA; then
-		echo "Uploading $OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz to Mega. "
+		echo "Uploading $OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.$TAR_EXTENSION to Mega. "
 		$MEGAPUT --reload --config=$MEGA_CONFIG_FILE \
-			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.tgz \
+			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$DATE_FORMAT.$TAR_EXTENSION \
 			--path=$MEGA_UPLOAD_DIR
 		echo "Done."
 	fi
@@ -200,7 +203,7 @@ if $DO_BACKUP; then
 		echo "   Checking if old backups need to be deleted"
 		# Multiply OLD_MONTHS by 100 to compare age
 		LIMIT_AGE=$((OLD_MONTHS*100))
-		for old_backup in $( ls $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*.tgz )
+		for old_backup in $( ls $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*.$TAR_EXTENSION )
 		do
 			old_date=$(basename $old_backup | awk '{split($0,a,"_"); print a[3]}' | \
 				awk '{split($0,a,"."); print a[1]}')
@@ -210,9 +213,9 @@ if $DO_BACKUP; then
 				rm -f $old_backup
 			
 				if $ALSO_DELETE_FROM_MEGA; then
-					echo "      Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz from Mega"
+					echo "      Deleting $OWNCLOUD_BACKUP_PREFIX"_"$old_date.$TAR_EXTENSION from Mega"
 					$MEGARM --reload --config=$MEGA_CONFIG_FILE \
-						$MEGA_UPLOAD_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$old_date.tgz
+						$MEGA_UPLOAD_DIR/$OWNCLOUD_BACKUP_PREFIX"_"$old_date.$TAR_EXTENSION
 				fi
 			fi
 		done
@@ -226,10 +229,11 @@ if $DO_BACKUP; then
 fi
 
 if $DO_RESTORE; then
-	if [ -f $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz ]; then
+	if [ -f $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.$TAR_EXTENSION ]; then
 		# Extract backup to folder
-		$TAR -xzf --overwrite $EXCLUDE_PATTERN \
-			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.tgz -C /
+		$TAR $TAR_DECOMPRESS_OPT --overwrite $EXCLUDE_PATTERN \
+			$OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX_$RESTORE_DATE.$TAR_EXTENSION \
+			$TAR_USE_PROGRAM -C /
 		# Restore database
 		mysql -h $MYSQL_SERVER -u $MYSQL_USERNAME -p$MYSQL_PASSWORD \
 			$MYSQL_DB_NAME < $OWNCLOUD_OUTPUT_DIR/owncloud_sql_$RESTORE_DATE.bak
