@@ -62,11 +62,11 @@ TAR_USE_PROGRAM="--use-compress-prog=pbzip2"
 
 # Delete old backups to save disk space. 
 #   * Let empty if you do not want to delete. 
-#   * Set to e.g 3 to delete files older than 3 months.
-OLD_MONTHS=1
+#   * Set to e.g 10 to delete files older than 10 days.
+OLD_DAYS=10
 
 # Megatools 
-ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_MONTHS
+ALSO_DELETE_FROM_MEGA=true         # also delete backups older than $OLD_DAYS
 MEGATOOLS_DIR="$HOME/build/bin/"   # path to where Megatools have been installed
 MEGA_CONFIG_FILE="$HOME/.megarc"   # megatools config file
 MEGA_UPLOAD_DIR="/Root/backup/rpi" # upload path on Mega
@@ -199,16 +199,14 @@ if $DO_BACKUP; then
 	fi
 
 	# Check to delete old backups
-	if [[ ! -z $OLD_MONTHS ]]; then
+	if [[ ! -z $OLD_DAYS ]]; then
 		echo "   Checking if old backups need to be deleted"
-		# Multiply OLD_MONTHS by 100 to compare age
-		LIMIT_AGE=$((OLD_MONTHS*100))
 		for old_backup in $( ls $OWNCLOUD_OUTPUT_DIR/$OWNCLOUD_BACKUP_PREFIX*.$TAR_EXTENSION )
 		do
 			old_date=$(basename $old_backup | awk '{split($0,a,"_"); print a[3]}' | \
 				awk '{split($0,a,"."); print a[1]}')
-			age=$((DATE_FORMAT-old_date))
-			if [ "$age" -gt "$LIMIT_AGE" ]; then
+			age=$(( ($(date --date="$DATE_FORMAT" +%s) - $(date --date="$old_date" +%s) )/(60*60*24) ))
+			if [ "$age" -gt "$OLD_DAYS" ]; then
 				echo "      Deleting old backup on disk : $old_backup"	
 				rm -f $old_backup
 			
